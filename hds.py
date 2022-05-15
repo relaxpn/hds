@@ -120,6 +120,11 @@ def local_bobcat_miner_report():
                 bobcat_request = requests.get(bobcat_miner_json, headers=headers)
                 data = bobcat_request.json()
 
+                # LIVE blockchain data
+                bobcat_status_json = config["bobcat_local_endpoint"] + "status.json"
+                bobcat_status_request = requests.get(bobcat_status_json, headers=headers)
+                status_data = bobcat_status_request.json()
+
                 ### Dev only
                 ###LOCAL load miner.json
                 # with open("miner.json") as json_data_file:
@@ -152,7 +157,7 @@ def local_bobcat_miner_report():
                     miner_state = f"**{miner_state}**"
 
                 # miner_height
-                miner_height_int = int(data["miner_height"])
+                miner_height_int = int(status_data["miner_height"])
                 miner_height = "{:,}".format(miner_height_int)
                 if "miner_height" not in config["last"]["report"]:
                     config["last"]["report"]["miner_height"] = ""
@@ -161,7 +166,7 @@ def local_bobcat_miner_report():
                     miner_height = f"**{miner_height}**"
 
                 # miner_block
-                miner_block_int = int(data["blockchain_height"])
+                miner_block_int = int(status_data["blockchain_height"])
                 miner_block = "{:,}".format(miner_block_int)
                 if "miner_block" not in config["last"]["report"]:
                     config["last"]["report"]["miner_block"] = ""
@@ -179,7 +184,7 @@ def local_bobcat_miner_report():
                     miner_epoch = f"**{miner_epoch}**"
 
                 # miner_gap
-                miner_gap_int = int(data["blockchain_height"]) - int(
+                miner_gap_int = int(status_data["blockchain_height"]) - int(
                     data["miner_height"]
                 )
                 miner_gap_int = 0 if miner_gap_int < 0 else miner_gap_int
@@ -207,7 +212,8 @@ def local_bobcat_miner_report():
                 # UPDATE - check peerbook for p2p(open) or ip4(relayed)
 
                 new_miner_port_44158 = False
-                miner_port_44158 = data["ports"]["44158"].title()
+                public_ip = data["public_ip"]
+                miner_port_44158 = data["ports"][public_ip + ":44158"].title()
                 if "miner_port_44158" not in config["last"]["report"]:
                     config["last"]["report"]["miner_port_44158"] = ""
                 if miner_port_44158 != config["last"]["report"]["miner_port_44158"]:
