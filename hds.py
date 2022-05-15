@@ -58,7 +58,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 ### vars
 # override default values in config.json
 wellness_check_hours = 12  # Default 8 hours. send status msg if X hours have lapsed since last message sent. slows miner, don't abuse
-report_interval_hours = 72  # HOURS scheduled miner report. time after last report sent. slows miner, don't abuse
+report_interval_hours = 24  # HOURS scheduled miner report. time after last report sent. slows miner, don't abuse
 #
 #
 history_length_max = 200 # Trim activity history when reaches this length
