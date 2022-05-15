@@ -863,6 +863,9 @@ def discord_send():
 
         output_message_length = len(output_message)
 
+        # output message in correct order
+        output_message.reverse()
+
         discord_message = "\n".join(output_message)
 
         ### Dev only
