@@ -546,6 +546,8 @@ def poc_receipts_v1(activity):
 
     # witnessed beacon plus valid or invalid and invalid reason
     elif bool(witnesses):
+        geocode = activity["path"][0]["geocode"]
+        geocode_info = f" of {geocode['long_street']}, {geocode['long_city']} ({geocode['short_country']})"
         vw = 0  # valid witnesses
         valid_witness = False
         for w in witnesses:
@@ -570,7 +572,7 @@ def poc_receipts_v1(activity):
             witness_info += f", {vw} Valid"
 
         output_message.append(
-            f"{valid_text} Witness{witness_info}  `{time}` {txn_link}"
+            f"{valid_text} Witness{geocode_info}{witness_info}  `{time}` {txn_link}"
         )
 
     # other
