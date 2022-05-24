@@ -46,7 +46,9 @@ import logging
 from datetime import datetime
 from discord_webhook import DiscordWebhook
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 ####
 # Notes:
@@ -61,11 +63,13 @@ wellness_check_hours = 12  # Default 8 hours. send status msg if X hours have la
 report_interval_hours = 24  # HOURS scheduled miner report. time after last report sent. slows miner, don't abuse
 #
 #
-history_length_max = 200 # Trim activity history when reaches this length
-history_length_min = 125 # when trim activity history, leave newest
+history_length_max = 200  # Trim activity history when reaches this length
+history_length_min = 125  # when trim activity history, leave newest
 sync_blocks_behind = 100  # Blocks Behind blockchain to be considered out of sync
 api_sync_lag_multiple = 5  # Multiply sync_blocks_behind * api_sync_lag_multiple to balance with Helium API "Sync Status"
-pop_status_minutes = 7  # MINUTES remove status msg when sending activity if activity is recent to last activity sent. keep discord tidy
+# pop_status_minutes = 7  # MINUTES remove status msg when sending activity if activity is recent to last activity sent. keep discord tidy
+# interval_pop_status_seconds = int(60 * pop_status_minutes)
+interval_pop_status_seconds = 390  # seconds - remove status msg when sending activity if activity is recent to last activity sent. keep discord tidy
 helium_api_endpoint = "https://api.helium.io/v1/"
 helium_explorer_tx = "https://explorer.helium.com/txns/"
 config_file = "config.json"
@@ -75,7 +79,6 @@ activity_history = []
 hs = {}
 wellness_check = history_repeats = wellness_check_seconds = 0
 report_interval_seconds = output_message_length = 0
-interval_pop_status_seconds = int(60 * pop_status_minutes)
 send = send_report = add_welcome = send_wellness_check = False
 invalid_reason_short_names = {
     "witness_too_close": "Too Close",
@@ -89,7 +92,7 @@ reward_short_names = {
     "data_credits": "Data",
 }
 # Generate a UUID from a host ID, sequence number, and the current time
-headers = {'User-Agent': str(uuid.uuid1())}
+headers = {"User-Agent": str(uuid.uuid1())}
 
 #### functions
 def local_bobcat_miner_report():
@@ -509,7 +512,7 @@ def load_activity_data():
 
 
 ###activity type poc_receipts_v1
-def poc_receipts_v1(activity):
+def poc_receipts(activity):
     valid_text = "💩  Invalid"
     time = nice_date(activity["time"])
 
@@ -597,6 +600,7 @@ def loop_activities():
         # load history
         load_activity_history()
 
+        # loop activities
         for activity in activities:
 
             # skip if activity is in history
@@ -629,22 +633,21 @@ def loop_activities():
                         f"🚛 Transferred {summary['num_packets']} Packet{packet_plural} ({summary['num_dcs']} DC)  `{time}` {txn_link}"
                     )
 
+            ## Disabled for Light Hotspots. no longer needed
             # ...challenge accepted
-            elif activity["type"] == "poc_request_v1" or "poc_request_v2":
-                output_message.append(
-                    f"🎲 Created Challenge...  `{time}` {txn_link}"
-                )
+            # initial poc_request_v2 support
+            # elif activity["type"] == "poc_request_v1":
+            #     output_message.append(f"🎲 Created Challenge...  `{time}` {txn_link}")
 
             # beacon sent, valid witness, invalid witness
-            elif activity["type"] == "poc_receipts_v1":
-                poc_receipts_v1(activity)
+            # elif activity["type"] == "poc_receipts_v1":
+            elif activity["type"] == "poc_receipts_v1" or "poc_receipts_v2":
+                poc_receipts(activity)
 
             # other
             else:
                 other_type = activity["type"]
-                output_message.append(
-                    f"🚀 {other_type.upper()}  `{time}` {txn_link}"
-                )
+                output_message.append(f"🚀 {other_type.upper()}  `{time}` {txn_link}")
 
 
 def load_hotspot_data_and_status():
@@ -747,7 +750,9 @@ def load_hotspot_data_and_status():
     ########################################################
 
     ###wallet data
-    wallet_request = requests.get(helium_api_endpoint + "accounts/" + hs["owner"], headers=headers)
+    wallet_request = requests.get(
+        helium_api_endpoint + "accounts/" + hs["owner"], headers=headers
+    )
     w = wallet_request.json()
 
     if "data" not in w:
@@ -796,12 +801,13 @@ def load_hotspot_data_and_status():
 
     # default status msg
     status_msg = (
-        "📡 **"
+        "📡**"
         + hs["initials"]
         + "** 🔥"
         + status_styled
-        + " 🥑"
-        + api_sync_styled
+        # + " ⛅️ LIGHT"
+        + " 🥑LIGHT"
+        # + api_sync_styled
         + " 🍕"
         + reward_scale_styled
         + " 🥓"
@@ -888,6 +894,10 @@ def main():
     get_time()
     load_config()
     load_activity_data()
+
+    ### Dev only
+    # print(activities)
+    # exit()
 
     # if activity data...
     load_hotspot_data_and_status()
